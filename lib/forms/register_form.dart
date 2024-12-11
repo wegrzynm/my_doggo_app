@@ -2,6 +2,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert'; 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/pages/login.dart';
 
 class RegisterForm extends StatefulWidget {
@@ -30,7 +31,7 @@ class _RegisterFormState extends State<RegisterForm> {
       _errorMessage = null;
     });
 
-    const String url = 'http://192.168.1.87:5000/api/register';
+    const String url = '${Environment.apiUrl}register';
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
     };

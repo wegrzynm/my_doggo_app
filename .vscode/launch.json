@@ -15,15 +15,6 @@
             ]
         },
         {
-            "name": "my_doggo_app",
-            "request": "launch",
-            "type": "dart",
-            "args": [
-                "--dart-define-from-file",
-                ".env/development.env"
-            ]
-        },
-        {
             "name": "my_doggo_app (profile mode)",
             "request": "launch",
             "type": "dart",
