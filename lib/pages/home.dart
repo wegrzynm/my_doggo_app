@@ -2,11 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/models/animal_model.dart';
 import 'package:my_doggo_app/pages/animal.dart';
+import 'package:my_doggo_app/pages/login.dart';
+import 'package:my_doggo_app/pages/memories.dart';
+import 'package:my_doggo_app/pages/vet.dart';
 import 'package:my_doggo_app/secure_storage.dart';
-import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,11 +23,22 @@ class _HomePageWidgetState extends State<HomePage> {
   String? _errorMessage;
   bool _isLoading = false;
   List<Animal> _animals = [];
+  late List<Widget> _pages;
+  int currentPageIndex = 0;
+  bool _isInitialized = false;
+
+  Future<void> _initializeToken() async {
+    final value = await SecureStorage().readToken();
+    setState(() {
+      token = value;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _fetchAnimals();
+    _initializePages();
   }
 
   Future<void> _fetchAnimals() async {
@@ -33,46 +47,51 @@ class _HomePageWidgetState extends State<HomePage> {
       _isLoading = true;
       _errorMessage = null;
     });
-
     const String url = '${Environment.apiUrl}${Environment.apiVer}animals';
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token'
-    };
+    var response = await ApiUtils.getRequest(url);
+    var (statusCode, apiResponse) = response;
 
-    try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: headers,
-      );
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonList = json.decode(response.body);
+     if (statusCode == 200) {
+        final List<dynamic> jsonList = json.decode(apiResponse);
         final List<Animal> animals = Animal.listFromJson(jsonList);
         setState(() {
           _animals = animals;
+          _isLoading = false;
         });
       } else {
-        print(_animals.length);
-        final Map<String, dynamic> errorData = json.decode(response.body);
-        setState(() {
-          _errorMessage = errorData['error'] ?? 'An error occurred.';
-        });
+          final Map<String, dynamic> errorData = json.decode(apiResponse);
+          setState(() {
+            _errorMessage = errorData['error'] ?? 'An error occurred.';
+            _isLoading = false;
+          });
       }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to connect to the server.';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
-  Future<void> _initializeToken() async {
-    final value = await SecureStorage().readSecureData('token');
+  Future<void> _initializePages() async {
+    await _fetchAnimals();
     setState(() {
-      token = value;
+      _pages = [
+        // Home page with fetched animals
+        Container(
+          padding: const EdgeInsets.all(10),
+          child: ListView.separated(
+            itemBuilder: (context, index) => animalCard(context, _animals[index], token),
+            separatorBuilder: (context,index) => const SizedBox(height: 25,),
+            itemCount: _animals.length
+          ),
+        ),
+        
+        // Memories page (placeholder)
+        const Center(
+          child: Text('Memories Page'),
+        ),
+        
+        // Vet page (placeholder)
+        const Center(
+          child: Text('Vet Page'),
+        ),
+      ];
+      _isInitialized = true;
     });
   }
 
@@ -102,15 +121,42 @@ class _HomePageWidgetState extends State<HomePage> {
                 )
               )
             : _animals.isEmpty
-                ? const Center(child: Text('No animals found'))
-                : Container(
-                  padding: const EdgeInsets.all(10),
-                  child:  ListView.separated(
-                    itemBuilder: (context, index) => animalCard(context, _animals[index], token),
-                    separatorBuilder: (context,index) => const SizedBox(height: 25,),
-                    itemCount: _animals.length
-                  ),
-                ) 
+            ? const Center(child: Text('No animals found'))
+            : _pages[currentPageIndex], // Only this part changes
+      floatingActionButton: _isInitialized && currentPageIndex == 0 ? FloatingActionButton(
+        onPressed: () {},
+        foregroundColor: Colors.black,
+        backgroundColor: Colors.yellow,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add),
+      ) : null,
+      bottomNavigationBar: NavigationBar(
+        height: 80, // Slightly taller than standard
+        onDestinationSelected: (int index) {
+          setState(() {
+            currentPageIndex = index;
+          });
+        },
+        indicatorColor: Colors.amber,
+        selectedIndex: currentPageIndex,
+        destinations: const <Widget>[
+          NavigationDestination(
+            selectedIcon: Icon(Icons.home, size: 30),
+            icon: Icon(Icons.home_outlined, size: 30),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            selectedIcon: Icon(Icons.photo_album, size: 30),
+            icon: Icon(Icons.photo_album_outlined, size: 30),
+            label: 'Memories',
+          ),
+          NavigationDestination(
+            selectedIcon: Icon(Icons.medical_services, size: 30),
+            icon: Icon(Icons.medical_services_outlined, size: 30),
+            label: 'Vet',
+          ),
+        ],
+      ),
     );
   }
 
@@ -120,51 +166,50 @@ class _HomePageWidgetState extends State<HomePage> {
       'Content-Type': 'image/jpeg',
       'Authorization': 'Bearer $token'
     };
-  return Container(
-              height: 100,
-              padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xff1D1617).withOpacity(0.07),
-                    offset: const Offset(0,10),
-                    blurRadius: 40,
-                    spreadRadius: 0
-                  )
-                  ]
-              ),
-              child: GestureDetector(
-                onTap: () => _redirectAnimal(context, animal.id),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          animal.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
-                            fontSize: 30
-                          ),
+    return Container(
+            height: 100,
+            padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xff1D1617).withOpacity(0.07),
+                  offset: const Offset(0,10),
+                  blurRadius: 40,
+                  spreadRadius: 0
+                )
+                ]
+            ),
+            child: GestureDetector(
+              onTap: () => _redirectAnimal(context, animal.id),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        animal.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                          fontSize: 30
                         ),
-                      ],
-                    ),
-                    Image.network(
-                      "${Environment.apiUrl}${Environment.apiVer}images/${animal.profilePhotoId}", headers: headers,
-                      width: 90,
-                      height: 90,
-                    )
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  Image.network(
+                    "${Environment.apiUrl}${Environment.apiVer}images/${animal.profilePhotoId}", headers: headers,
+                    width: 90,
+                    height: 90,
+                  )
+                ],
               ),
-            );
+            ),
+    );
   }
-
 }
 
 AppBar appBar(BuildContext context, MaterialPageRoute? designatedRoute) {
@@ -201,25 +246,44 @@ AppBar appBar(BuildContext context, MaterialPageRoute? designatedRoute) {
             )),
           ),
           actions: [
-            GestureDetector(
-              onTap: () {
-                
+            MenuAnchor(
+          builder: (BuildContext context, MenuController controller, Widget? child) {
+            return IconButton(
+              onPressed: () {
+                if (controller.isOpen) {
+                  controller.close();
+                } else {
+                  controller.open();
+                }
               },
-              child: Container(
-              width: 37,
-              margin: const EdgeInsets.all(10),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10)
+              icon: const CircleAvatar(
+                backgroundColor: Colors.yellow, // Replace with your user's avatar or color
+                child: Icon(Icons.person, color: Colors.white),
               ),
-              child: SvgPicture.asset(
-                "assets/icons/dots.svg",
-                height: 5,
-                width: 5,
+            );
+          },
+          menuChildren: [
+            MenuItemButton(
+              onPressed: () {
+                _logout(context);
+              },
+              child: const Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 20
+                ),
               ),
-            )
             ),
           ],
-        );
+        ),
+      ],
+    );
+}
+
+void _logout(BuildContext context) {
+  SecureStorage().deleteSecureData('token');
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => const LoginPage()),
+  );
 }

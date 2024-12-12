@@ -15,4 +15,9 @@ class SecureStorage {
   deleteSecureData(String key) async {
     await _storage.delete(key: key);
   }
+
+  readToken() async {
+    String value = await _storage.read(key: 'token') ?? "No data found";
+    return value;
+  }
 }

@@ -1,5 +1,5 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'dart:convert'; // For JSON encoding/decoding
 import 'package:my_doggo_app/pages/home.dart';
@@ -29,23 +29,16 @@ class _LoginFormState extends State<LoginForm> {
     });
 
     const String url = '${Environment.apiUrl}login';
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json',
-    };
     final Map<String, String> body = {
       'email': _emailController.text,
       'password': _passwordController.text,
     };
 
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: json.encode(body),
-      );
+    var response = await ApiUtils.postRequest(url,body, false);
+    var (statusCode, apiResponse) = response;
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+    if (statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(apiResponse);
         final String token = data['token'];
 
         // Save the token securely
@@ -56,18 +49,13 @@ class _LoginFormState extends State<LoginForm> {
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
         );
-      } else {
-        final Map<String, dynamic> errorData = json.decode(response.body);
         setState(() {
-          _errorMessage = errorData['error'] ?? 'An error occurred.';
+          _isLoading = false;
         });
-      }
-    } catch (e) {
+    } else {
+      final Map<String, dynamic> errorData = json.decode(apiResponse);
       setState(() {
-        _errorMessage = 'Failed to connect to the server.';
-      });
-    } finally {
-      setState(() {
+        _errorMessage = errorData['error'] ?? 'An error occurred.';
         _isLoading = false;
       });
     }

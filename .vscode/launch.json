@@ -31,7 +31,7 @@
             "flutterMode": "release",
             "args": [
                 "--dart-define-from-file",
-                ".env/development.env"
+                ".env/production.env"
             ]
         }
     ]

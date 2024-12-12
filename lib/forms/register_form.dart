@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert'; 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/pages/login.dart';
 
@@ -32,9 +32,6 @@ class _RegisterFormState extends State<RegisterForm> {
     });
 
     const String url = '${Environment.apiUrl}register';
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json',
-    };
     final Map<String, String> body = {
       'email': _emailController.text,
       'password': _passwordController.text,
@@ -42,38 +39,25 @@ class _RegisterFormState extends State<RegisterForm> {
       'lastname': _lastnameController.text,
     };
 
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: json.encode(body),
+    var response = await ApiUtils.postRequest(url,body, false);
+    var (statusCode, apiResponse) = response;
+
+    if (statusCode == 201) {
+      final Map<String, dynamic> data = json.decode(apiResponse);
+      final String token = data['message'];
+
+      // Save the token securely
+      await _secureStorage.write(key: 'auth_token', value: token);
+
+      // Navigate or show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registerd successfuly!')),
       );
-
-      if (response.statusCode == 201) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final String token = data['message'];
-
-        // Save the token securely
-        await _secureStorage.write(key: 'auth_token', value: token);
-
-        // Navigate or show success message
-       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registerd successfuly!')),
-        );
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
-      } else {
-        final Map<String, dynamic> errorData = json.decode(response.body);
-        setState(() {
-          _errorMessage = errorData['error'] ?? 'An error occurred.';
-        });
-      }
-    } catch (e) {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+    } else {
+      final Map<String, dynamic> errorData = json.decode(apiResponse);
       setState(() {
-        _errorMessage = 'Failed to connect to the server.';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
+        _errorMessage = errorData['error'] ?? 'An error occurred.';
       });
     }
   }

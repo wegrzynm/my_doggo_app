@@ -1,11 +1,11 @@
 ﻿import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/models/animal_model.dart';
 import 'package:my_doggo_app/pages/home.dart';
 import 'package:my_doggo_app/secure_storage.dart';
-import 'package:http/http.dart' as http;
 
 class AnimalPage extends StatefulWidget {
   final int animalId;
@@ -64,35 +64,21 @@ class _AnimalPage extends State<AnimalPage> {
     });
 
     String url = '${Environment.apiUrl}${Environment.apiVer}animals/${widget.animalId}';
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token'
-    };
+    var response = await ApiUtils.getRequest(url);
+    var (statusCode, apiResponse) = response;
 
-    try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: headers,
-      );
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final Animal animal = Animal.fromJson(data);
-        setState(() {
-          _animal = animal;
-        });
-        _getAnimalAge();
-      } else {
-        final Map<String, dynamic> errorData = json.decode(response.body);
-        setState(() {
-          _errorMessage = errorData['error'] ?? 'An error occurred.';
-        });
-      }
-    } catch (e) {
+    if (statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(apiResponse);
+      final Animal animals = Animal.fromJson(data);
       setState(() {
-        _errorMessage = 'Failed to connect to the server.';
+        _animal = animals;
+        _isLoading = false;
       });
-    } finally {
+      _getAnimalAge();
+    } else {
+      final Map<String, dynamic> errorData = json.decode(apiResponse);
       setState(() {
+        _errorMessage = errorData['error'] ?? 'An error occurred.';
         _isLoading = false;
       });
     }
@@ -126,7 +112,6 @@ class _AnimalPage extends State<AnimalPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image and Title Section
             Center(
               child: Column(
                 children: [
@@ -141,7 +126,7 @@ class _AnimalPage extends State<AnimalPage> {
                 ],
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
