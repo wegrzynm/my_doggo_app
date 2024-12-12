@@ -1,0 +1,258 @@
+﻿import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:my_doggo_app/environment.dart';
+import 'package:my_doggo_app/models/animal_model.dart';
+import 'package:my_doggo_app/pages/home.dart';
+import 'package:my_doggo_app/secure_storage.dart';
+import 'package:http/http.dart' as http;
+
+class AnimalPage extends StatefulWidget {
+  final int animalId;
+  const AnimalPage({super.key, required this.animalId});
+
+  @override
+  State<AnimalPage> createState() => _AnimalPage();
+}
+
+class _AnimalPage extends State<AnimalPage> {
+  String? token;
+  String? _errorMessage;
+  bool _isLoading = false;
+  Animal? _animal;
+  String _animalAge = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAnimal();
+  }
+
+  void _getAnimalAge() {
+    if (_animal == null) {
+      return;
+    }
+    DateTime now = DateTime.now();
+    int totalDays = now.difference(_animal!.birthdate).inDays;
+    int years = totalDays ~/ 365;
+    int months = (totalDays-years*365) ~/ 30;
+    String animalAge = "";
+    if (years > 0) {
+      animalAge = "$years yo";
+    }else
+    {
+      animalAge = "$months months old";
+    }
+    setState(() {
+      _animalAge = animalAge;
+    });
+  }
+
+
+  Future<void> _initializeToken() async {
+    final value = await SecureStorage().readSecureData('token');
+    setState(() {
+      token = value;
+    });
+  }
+
+  Future<void> _fetchAnimal() async {
+    await _initializeToken();
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    String url = '${Environment.apiUrl}${Environment.apiVer}animals/${widget.animalId}';
+    final Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token'
+    };
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Animal animal = Animal.fromJson(data);
+        setState(() {
+          _animal = animal;
+        });
+        _getAnimalAge();
+      } else {
+        final Map<String, dynamic> errorData = json.decode(response.body);
+        setState(() {
+          _errorMessage = errorData['error'] ?? 'An error occurred.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to connect to the server.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, String> headers = {
+      'Content-Type': 'image/jpeg',
+      'Authorization': 'Bearer $token'
+    };
+    return Scaffold(
+      appBar: appBar(context, MaterialPageRoute(builder: (context) => const HomePage())),
+      body: _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _errorMessage != null
+            ? Center(
+              child: Column(
+                children: [
+                  Text(_errorMessage!),
+                  ElevatedButton(
+                    onPressed: _fetchAnimal, 
+                    child: const Text("Try Again!")
+                  )
+                ]
+                )
+              )
+            : _animal == null
+                ? const Center(child: Text('No animal found'))
+                : SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image and Title Section
+            Center(
+              child: Column(
+                children: [
+                  Image.network(
+                      "${Environment.apiUrl}${Environment.apiVer}images/${_animal!.profilePhotoId}", headers: headers,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _animal!.name,
+                    style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Details",
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildDetailsCard(_animalAge,"${_animal!.birthdate.year}-${_animal!.birthdate.month}-${_animal!.birthdate.day}", Icons.star)
+                      /*
+                      _buildDetailsCard(_animal!.animalDetails.breed != "" ? _animal!.animalDetails.breed : "No info", Icons.grade),
+                      _buildDetailsCard(_animal!.animalDetails.dogHairType != "" ? _animal!.animalDetails.dogHairType : "No info", Icons.grass),
+                      _buildDetailsCard(_animal!.animalDetails.isNeutered.toString() , Icons.emoji_food_beverage),
+                      _buildDetailsCard(_animal!.animalDetails.chipNo.isValid ? _animal!.animalDetails.chipNo.value : false.toString(), Icons.access_alarm_sharp)
+                      */
+                    ],
+                  ),
+                  const SizedBox(height: 16,),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (){},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 6.0,
+                      ),
+                      child: const Text(
+                        "Update info",
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Steps Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Vet visits",
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  _animal!.visits != null  ?
+                    ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: _animal!.visits != null ? _animal!.visits.length : 0,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                              child: Text('${index + 1}'),
+                              backgroundColor: Colors.blue,
+                            ),
+                            title: Text("Step ${index + 1}"),
+                            subtitle: Text("Description of step ${index + 1}..."),
+                          );
+                        },
+                      )
+                      : const Text(
+                        "No visits data",
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                        )
+                  
+                  
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _buildDetailsCard(String label, String content, IconData icon) {
+    return Column(
+        children: [
+          Icon(icon, size: 40, color: Colors.orange),
+          const SizedBox(height: 8),
+          Text(label,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500
+            ),
+          ),
+          Text(content,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400
+            ),
+          ),
+        ],
+    );
+  }
+}
