@@ -18,7 +18,6 @@ class _RegisterFormState extends State<RegisterForm> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _lastnameController = TextEditingController();
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -44,14 +43,11 @@ class _RegisterFormState extends State<RegisterForm> {
 
     if (statusCode == 201) {
       final Map<String, dynamic> data = json.decode(apiResponse);
-      final String token = data['message'];
-
-      // Save the token securely
-      await _secureStorage.write(key: 'auth_token', value: token);
+      final String msg = data['message'];
 
       // Navigate or show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registerd successfuly!')),
+        SnackBar(content: Text(msg)),
       );
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
     } else {

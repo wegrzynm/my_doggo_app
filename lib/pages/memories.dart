@@ -1,5 +1,4 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:my_doggo_app/pages/home.dart';
 
 class MemoriesPage extends StatefulWidget {
   final int userId;
@@ -13,9 +12,8 @@ class _MemoriesPage extends State<MemoriesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBar(context, MaterialPageRoute(builder: (context) => const HomePage())),
-      body: Text("Memories"),
+    return Center(
+      child: Text("Memories"),
     );
   }
 }

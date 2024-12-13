@@ -12,8 +12,8 @@ class _VetPage extends State<VetPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Text("Vets"),
+    return Center(
+      child: Text("Vets"),
     );
   }
 }

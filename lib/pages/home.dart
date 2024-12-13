@@ -5,10 +5,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/models/animal_model.dart';
+import 'package:my_doggo_app/pages/add_animal.dart';
 import 'package:my_doggo_app/pages/animal.dart';
 import 'package:my_doggo_app/pages/login.dart';
-import 'package:my_doggo_app/pages/memories.dart';
-import 'package:my_doggo_app/pages/vet.dart';
 import 'package:my_doggo_app/secure_storage.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,7 +19,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageWidgetState extends State<HomePage> {
   String? token;
-  int? _userId;
   String? _errorMessage;
   bool _isLoading = false;
   List<Animal> _animals = [];
@@ -30,10 +28,8 @@ class _HomePageWidgetState extends State<HomePage> {
 
   Future<void> _initializeToken() async {
     final value = await SecureStorage().readToken();
-    final userId = ApiUtils.decodeToken(value)['id'];
     setState(() {
       token = value;
-      _userId = userId;
     });
   }
 
@@ -95,21 +91,9 @@ class _HomePageWidgetState extends State<HomePage> {
     await _fetchAnimals();
     setState(() {
       _pages = [
-        // Home page with fetched animals
-        Container(
-          padding: const EdgeInsets.all(10),
-          child: ListView.separated(
-            itemBuilder: (context, index) => animalCard(context, _animals[index], token),
-            separatorBuilder: (context,index) => const SizedBox(height: 25,),
-            itemCount: _animals.length
-          ),
-        ),
-        
-        // Memories page (placeholder)
-        MemoriesPage(userId: _userId!),
-        
-        // Vet page (placeholder)
-        VetPage(userId: _userId!)
+        homePage(context),
+        memoriesPage(context),
+        vetsPage(context)
       ];
       _isInitialized = true;
     });
@@ -145,40 +129,53 @@ class _HomePageWidgetState extends State<HomePage> {
               : _isInitialized && _pages.isNotEmpty
                   ? _pages[currentPageIndex]
                   : const Center(child: CircularProgressIndicator()),
-      floatingActionButton: _isInitialized && currentPageIndex == 0 ? FloatingActionButton(
-        onPressed: () {},
-        foregroundColor: Colors.black,
-        backgroundColor: Colors.yellow,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add),
-      ) : null,
-      bottomNavigationBar: NavigationBar(
-        height: 80, // Slightly taller than standard
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
-        indicatorColor: Colors.amber,
-        selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
-          NavigationDestination(
-            selectedIcon: Icon(Icons.home, size: 30),
-            icon: Icon(Icons.home_outlined, size: 30),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.photo_album, size: 30),
-            icon: Icon(Icons.photo_album_outlined, size: 30),
-            label: 'Memories',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.medical_services, size: 30),
-            icon: Icon(Icons.medical_services_outlined, size: 30),
-            label: 'Vet',
-          ),
-        ],
-      ),
+      floatingActionButton: _isInitialized && currentPageIndex == 0 ? _addAnimalButton() : null,
+      bottomNavigationBar: _bottomNavigationBarHomePage(),
+    );
+  }
+
+  FloatingActionButton _addAnimalButton() {
+    return FloatingActionButton(
+      onPressed: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => AddAnimal()),
+        );
+      },
+      foregroundColor: Colors.black,
+      backgroundColor: Colors.yellow,
+      shape: const CircleBorder(),
+      child: const Icon(Icons.add),
+    );
+  }
+
+  NavigationBar _bottomNavigationBarHomePage() {
+    return NavigationBar(
+      height: 80, // Slightly taller than standard
+      onDestinationSelected: (int index) {
+        setState(() {
+          currentPageIndex = index;
+        });
+      },
+      indicatorColor: Colors.amber,
+      selectedIndex: currentPageIndex,
+      destinations: const <Widget>[
+        NavigationDestination(
+          selectedIcon: Icon(Icons.home, size: 30),
+          icon: Icon(Icons.home_outlined, size: 30),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.photo_album, size: 30),
+          icon: Icon(Icons.photo_album_outlined, size: 30),
+          label: 'Memories',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.medical_services, size: 30),
+          icon: Icon(Icons.medical_services_outlined, size: 30),
+          label: 'Vet',
+        ),
+      ],
     );
   }
 
@@ -223,13 +220,36 @@ class _HomePageWidgetState extends State<HomePage> {
                     ],
                   ),
                   Image.network(
-                    "${Environment.apiUrl}${Environment.apiVer}images/${animal.profilePhotoId}", headers: headers,
+                    "${Environment.apiUrl}${Environment.apiVer}images/${animal.profilePhoto.name}", headers: headers,
                     width: 90,
                     height: 90,
                   )
                 ],
               ),
             ),
+    );
+  }
+
+  Container homePage (BuildContext context) {
+    return Container(
+            padding: const EdgeInsets.all(10),
+            child: ListView.separated(
+              itemBuilder: (context, index) => animalCard(context, _animals[index], token),
+              separatorBuilder: (context,index) => const SizedBox(height: 25,),
+              itemCount: _animals.length
+            ),
+          );
+  }
+  
+  Center memoriesPage (BuildContext context) {
+    return Center(
+      child: Text("Memories"),
+    );
+  }
+
+  Center vetsPage (BuildContext context) {
+    return Center(
+      child: Text("Memories"),
     );
   }
 }

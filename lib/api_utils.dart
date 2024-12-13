@@ -1,4 +1,5 @@
 ﻿import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/secure_storage.dart';
@@ -28,7 +29,7 @@ class ApiUtils {
     }
   }
 
-  static Future<(int, String)> postRequest(String url, Map<String, String> body, bool isAuthorized) async {
+  static Future<(int, String)> postRequest(String url, Map<String, dynamic> body, bool isAuthorized) async {
     final Map<String, String> headers;
     if (isAuthorized) {
       headers = {
@@ -94,6 +95,25 @@ class ApiUtils {
         final String token = data['token'];
         SecureStorage().deleteSecureData('token');
         SecureStorage().writeSecureData('token', token);
+    }
+  }
+
+  static Future<(int, String)> uploadImage(String url, File file) async {
+    final request = http.MultipartRequest('POST', Uri.parse(url))
+    ..headers['Authorization'] = 'Bearer ${await SecureStorage().readToken()}'
+    ..files.add(await http.MultipartFile.fromPath('images', file.path));
+
+    try {
+      final response = await request.send();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseBody = await response.stream.bytesToString();
+        return (response.statusCode, responseBody);
+      } else {
+        final responseBody = await response.stream.bytesToString();
+        return (response.statusCode, responseBody);
+      }
+    } catch (e) {
+      return (500,[{'error': e.toString()}].toString());
     }
   }
 }

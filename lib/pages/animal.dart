@@ -116,7 +116,7 @@ class _AnimalPage extends State<AnimalPage> {
               child: Column(
                 children: [
                   Image.network(
-                      "${Environment.apiUrl}${Environment.apiVer}images/${_animal!.profilePhotoId}", headers: headers,
+                      "${Environment.apiUrl}${Environment.apiVer}images/${_animal!.profilePhoto.name}", headers: headers,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -196,8 +196,8 @@ class _AnimalPage extends State<AnimalPage> {
                         itemBuilder: (context, index) {
                           return ListTile(
                             leading: CircleAvatar(
-                              child: Text('${index + 1}'),
                               backgroundColor: Colors.blue,
+                              child: Text('${index + 1}'),
                             ),
                             title: Text("Step ${index + 1}"),
                             subtitle: Text("Description of step ${index + 1}..."),
