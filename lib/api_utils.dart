@@ -1,6 +1,8 @@
 ﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class ApiUtils {
   
@@ -52,6 +54,46 @@ class ApiUtils {
       }
     } catch (e) {
       return (500,[{'error': e.toString()}].toString());
+    }
+  }
+
+  static bool isTokenExpired(String token) {
+    try {
+      return JwtDecoder.isExpired(token);
+    } catch (e) {
+      return true; // Treat as expired if decoding fails
+    }
+  }
+
+  static Map<String, dynamic> decodeToken(String token) {
+    try {
+      return JwtDecoder.decode(token);
+    } catch (e) {
+      return {};
+    }
+  }
+
+  static void validateToken(String token) async {
+    if(!isTokenExpired(token)) {
+      return;
+    }
+    String login = await SecureStorage().readSecureData('login');
+    String password = await SecureStorage().readSecureData('password');
+
+    const String url = '${Environment.apiUrl}login';
+    final Map<String, String> body = {
+      'email': login,
+      'password': password,
+    };
+
+    var response = await ApiUtils.postRequest(url,body, false);
+    var (statusCode, apiResponse) = response;
+
+    if (statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(apiResponse);
+        final String token = data['token'];
+        SecureStorage().deleteSecureData('token');
+        SecureStorage().writeSecureData('token', token);
     }
   }
 }

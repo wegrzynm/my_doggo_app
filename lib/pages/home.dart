@@ -20,35 +20,59 @@ class HomePage extends StatefulWidget {
 
 class _HomePageWidgetState extends State<HomePage> {
   String? token;
+  int? _userId;
   String? _errorMessage;
   bool _isLoading = false;
   List<Animal> _animals = [];
-  late List<Widget> _pages;
+  List<Widget> _pages = [];
   int currentPageIndex = 0;
   bool _isInitialized = false;
 
   Future<void> _initializeToken() async {
     final value = await SecureStorage().readToken();
+    final userId = ApiUtils.decodeToken(value)['id'];
     setState(() {
       token = value;
+      _userId = userId;
     });
   }
 
   @override
   void initState() {
     super.initState();
-    _fetchAnimals();
-    _initializePages();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      await _initializeToken();
+      await _fetchAnimals();
+      await _initializePages();
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load data';
+      });
+    }
   }
 
   Future<void> _fetchAnimals() async {
-    await _initializeToken();
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
     const String url = '${Environment.apiUrl}${Environment.apiVer}animals';
-    var response = await ApiUtils.getRequest(url);
+    var response = await ApiUtils.getRequest(url).timeout(
+      const Duration(seconds: 10), // Add timeout
+      onTimeout: () {
+        setState(() {
+          _errorMessage = "Request timed out";
+          _isLoading = false;
+        });
+        return (500, json.encode({'error': 'Request timed out'}));
+      },
+    );
     var (statusCode, apiResponse) = response;
 
      if (statusCode == 200) {
@@ -82,14 +106,10 @@ class _HomePageWidgetState extends State<HomePage> {
         ),
         
         // Memories page (placeholder)
-        const Center(
-          child: Text('Memories Page'),
-        ),
+        MemoriesPage(userId: _userId!),
         
         // Vet page (placeholder)
-        const Center(
-          child: Text('Vet Page'),
-        ),
+        VetPage(userId: _userId!)
       ];
       _isInitialized = true;
     });
@@ -107,22 +127,24 @@ class _HomePageWidgetState extends State<HomePage> {
     return Scaffold(
       appBar: appBar(context, null),
       body: _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : _errorMessage != null
-            ? Center(
-              child: Column(
-                children: [
-                  Text(_errorMessage!),
-                  ElevatedButton(
-                    onPressed: _fetchAnimals, 
-                    child: const Text("Try Again!")
-                  )
-                ]
+      ? const Center(child: CircularProgressIndicator())
+      : _errorMessage != null
+          ? Center(
+            child: Column(
+              children: [
+                Text(_errorMessage!),
+                ElevatedButton(
+                  onPressed: _fetchAnimals, 
+                  child: const Text("Try Again!")
                 )
-              )
-            : _animals.isEmpty
-            ? const Center(child: Text('No animals found'))
-            : _pages[currentPageIndex], // Only this part changes
+              ]
+            )
+          )
+          : _animals.isEmpty
+              ? const Center(child: Text('No animals found'))
+              : _isInitialized && _pages.isNotEmpty
+                  ? _pages[currentPageIndex]
+                  : const Center(child: CircularProgressIndicator()),
       floatingActionButton: _isInitialized && currentPageIndex == 0 ? FloatingActionButton(
         onPressed: () {},
         foregroundColor: Colors.black,
@@ -282,6 +304,8 @@ AppBar appBar(BuildContext context, MaterialPageRoute? designatedRoute) {
 
 void _logout(BuildContext context) {
   SecureStorage().deleteSecureData('token');
+  SecureStorage().deleteSecureData('login');
+  SecureStorage().deleteSecureData('password');
   Navigator.pushReplacement(
     context,
     MaterialPageRoute(builder: (context) => const LoginPage()),

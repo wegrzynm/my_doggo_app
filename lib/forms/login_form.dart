@@ -43,6 +43,8 @@ class _LoginFormState extends State<LoginForm> {
 
         // Save the token securely
         SecureStorage().writeSecureData('token', token);
+        SecureStorage().writeSecureData('login', _emailController.text);
+        SecureStorage().writeSecureData('password', _passwordController.text);
 
         // Navigate or show success message
         Navigator.pushReplacement(

@@ -17,7 +17,7 @@ class SecureStorage {
   }
 
   readToken() async {
-    String value = await _storage.read(key: 'token') ?? "No data found";
+    String? value = await _storage.read(key: 'token');
     return value;
   }
 }
