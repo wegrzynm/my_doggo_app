@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import 'dart:convert'; 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/pages/login.dart';

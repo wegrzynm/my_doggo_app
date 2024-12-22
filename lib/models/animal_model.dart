@@ -2,6 +2,7 @@
 import 'package:my_doggo_app/models/animal_type_model.dart';
 import 'package:my_doggo_app/models/photo_model.dart';
 import 'package:my_doggo_app/models/user_model.dart';
+import 'package:my_doggo_app/models/visits_model.dart';
 
 class Animal {
   final int id;
@@ -12,9 +13,10 @@ class Animal {
   final AnimalType animalType;
   final String name;
   final DateTime birthdate;
+  final bool gender;
   final int animalDetailsId;
   final AnimalDetails animalDetails;
-  final dynamic visits;
+  final List<Visit> visits;
   final int userId;
   final User user;
   final int profilePhotoId;
@@ -24,14 +26,15 @@ class Animal {
     required this.id,
     required this.createdAt,
     required this.updatedAt,
-    this.deletedAt,
+    required this.deletedAt,
     required this.animalTypeId,
     required this.animalType,
     required this.name,
     required this.birthdate,
+    required this.gender,
     required this.animalDetailsId,
     required this.animalDetails,
-    this.visits,
+    required this.visits,
     required this.userId,
     required this.user,
     required this.profilePhotoId,
@@ -48,6 +51,7 @@ class Animal {
       animalType: AnimalType.fromJson(json['animalType']),
       name: json['name'],
       birthdate: DateTime.parse(json['birthdate']),
+      gender: json['gender'],
       animalDetailsId: json['animalDetailsId'],
       animalDetails: AnimalDetails.fromJson(json['animalDetails']),
       visits: json['visits'],

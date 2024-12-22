@@ -140,34 +140,33 @@ class _AnimalPage extends State<AnimalPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildDetailsCard(_animalAge,"${_animal!.birthdate.year}-${_animal!.birthdate.month}-${_animal!.birthdate.day}", Icons.star)
-                      /*
-                      _buildDetailsCard(_animal!.animalDetails.breed != "" ? _animal!.animalDetails.breed : "No info", Icons.grade),
-                      _buildDetailsCard(_animal!.animalDetails.dogHairType != "" ? _animal!.animalDetails.dogHairType : "No info", Icons.grass),
-                      _buildDetailsCard(_animal!.animalDetails.isNeutered.toString() , Icons.emoji_food_beverage),
-                      _buildDetailsCard(_animal!.animalDetails.chipNo.isValid ? _animal!.animalDetails.chipNo.value : false.toString(), Icons.access_alarm_sharp)
-                      */
+                      _buildDetailsCard(_animalAge,"${_animal!.birthdate.year}-${_animal!.birthdate.month}-${_animal!.birthdate.day}", Icons.star),
+                      _buildDetailsCard("Gender", _animal!.gender == true ? "Boy" : "Girl",  _animal!.gender == true ? Icons.boy : Icons.girl),
+                      _buildDetailsCard("Breed", _animal!.animalDetails.breed != "" ? _animal!.animalDetails.breed : "No info", Icons.star_border)
                     ],
                   ),
                   const SizedBox(height: 16,),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: (){},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                  GestureDetector(
+                    onTap: () {},
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: (){},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 6.0,
                         ),
-                        elevation: 6.0,
-                      ),
-                      child: const Text(
-                        "Update info",
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.w600,
+                        child: const Text(
+                          "Update info",
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -176,8 +175,6 @@ class _AnimalPage extends State<AnimalPage> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Steps Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
@@ -188,19 +185,19 @@ class _AnimalPage extends State<AnimalPage> {
                     style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  _animal!.visits != null  ?
+                  _animal!.visits.isNotEmpty  ?
                     ListView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        itemCount: _animal!.visits != null ? _animal!.visits.length : 0,
+                        itemCount: _animal!.visits.isNotEmpty ? _animal!.visits.length : 0,
                         itemBuilder: (context, index) {
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: Colors.blue,
                               child: Text('${index + 1}'),
                             ),
-                            title: Text("Step ${index + 1}"),
-                            subtitle: Text("Description of step ${index + 1}..."),
+                            title: Text(_animal!.visits[index].visitReason),
+                            subtitle: Text(_animal!.visits[index].visitDate.toString()),
                           );
                         },
                       )
@@ -210,8 +207,6 @@ class _AnimalPage extends State<AnimalPage> {
                           fontSize: 18,
                         ),
                         )
-                  
-                  
                 ],
               ),
             ),
