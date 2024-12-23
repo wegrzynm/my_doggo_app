@@ -54,7 +54,9 @@ class Animal {
       gender: json['gender'],
       animalDetailsId: json['animalDetailsId'],
       animalDetails: AnimalDetails.fromJson(json['animalDetails']),
-      visits: json['visits'],
+      visits: json['visits'] != null
+        ? Visit.listFromJson(json['visits'] as List<dynamic>)
+        : [],
       userId: json['userId'],
       user: User.fromJson(json['user']),
       profilePhotoId: json['profilePhotoId'],

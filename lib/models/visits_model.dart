@@ -37,4 +37,9 @@ class Visit {
       vet: Vet.fromJson(json['vet']),
     );
   }
+
+  static List<Visit> listFromJson(List<dynamic>? jsonList) {
+    if (jsonList == null) return [];
+    return jsonList.map((json) => Visit.fromJson(json)).toList();
+  }
 }

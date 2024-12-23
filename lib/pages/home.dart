@@ -44,7 +44,6 @@ class _HomePageWidgetState extends State<HomePage> {
   Future<void> _initializeData() async {
     try {
       await _initializeToken();
-      await _fetchAnimals();
       await _initializePages();
     } catch (e) {
       setState(() {
@@ -59,16 +58,7 @@ class _HomePageWidgetState extends State<HomePage> {
       _errorMessage = null;
     });
     const String url = '${Environment.apiUrl}${Environment.apiVer}animals';
-    var response = await ApiUtils.getRequest(url).timeout(
-      const Duration(seconds: 10), // Add timeout
-      onTimeout: () {
-        setState(() {
-          _errorMessage = "Request timed out";
-          _isLoading = false;
-        });
-        return (500, json.encode({'error': 'Request timed out'}));
-      },
-    );
+    var response = await ApiUtils.getRequest(url);
     var (statusCode, apiResponse) = response;
 
      if (statusCode == 200) {
@@ -180,7 +170,6 @@ class _HomePageWidgetState extends State<HomePage> {
   }
 
   Container animalCard (BuildContext context, Animal animal, String? token) {
-    
   final Map<String, String> headers = {
       'Content-Type': 'image/jpeg',
       'Authorization': 'Bearer $token'
