@@ -5,8 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/models/animal_model.dart';
-import 'package:my_doggo_app/pages/add_animal.dart';
-import 'package:my_doggo_app/pages/animal.dart';
+import 'package:my_doggo_app/pages/animal/add_animal.dart';
+import 'package:my_doggo_app/pages/animal/animal.dart';
 import 'package:my_doggo_app/pages/login.dart';
 import 'package:my_doggo_app/secure_storage.dart';
 
@@ -238,7 +238,12 @@ class _HomePageWidgetState extends State<HomePage> {
 
   Center vetsPage (BuildContext context) {
     return Center(
-      child: Text("Memories"),
+      child: Column(
+        children: [
+          Text("Vets"),
+          Text("JS")
+        ],
+      ),
     );
   }
 }

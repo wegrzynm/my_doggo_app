@@ -117,6 +117,8 @@ class _AnimalPage extends State<AnimalPage> {
                 children: [
                   Image.network(
                       "${Environment.apiUrl}${Environment.apiVer}images/${_animal!.profilePhoto.name}", headers: headers,
+                      width: double.infinity,
+                      height: 500,
                   ),
                   const SizedBox(height: 16),
                   Text(
