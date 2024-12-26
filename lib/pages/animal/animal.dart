@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/models/animal_model.dart';
+import 'package:my_doggo_app/pages/animal/update_animal.dart';
 import 'package:my_doggo_app/pages/home.dart';
 import 'package:my_doggo_app/secure_storage.dart';
 
@@ -148,31 +149,30 @@ class _AnimalPage extends State<AnimalPage> {
                     ],
                   ),
                   const SizedBox(height: 16,),
-                  GestureDetector(
-                    onTap: () {},
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: (){},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          elevation: 6.0,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (){
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UpdateAnimalPage(animal: _animal!, token: token!,)));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text(
-                          "Update info",
-                          style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        elevation: 6.0,
+                      ),
+                      child: const Text(
+                        "Update info",
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

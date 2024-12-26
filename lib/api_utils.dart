@@ -58,11 +58,33 @@ class ApiUtils {
     }
   }
 
-  static bool isTokenExpired(String token) {
+  static Future<(int, String)> putRequest(String url, Map<String, dynamic> body) async {
+    final Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${await SecureStorage().readToken()}'
+    };
+
     try {
-      return JwtDecoder.isExpired(token);
+      final response = await http.put(
+        Uri.parse(url),
+        headers: headers,
+        body: json.encode(body),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return (response.statusCode, response.body);
+      } else {
+        return (response.statusCode, response.body);
+      }
     } catch (e) {
-      return true; // Treat as expired if decoding fails
+      return (500,[{'error': e.toString()}].toString());
+    }
+  }
+
+  static bool isTokenValid(String token) {
+    try {
+      return !JwtDecoder.isExpired(token);
+    } catch (e) {
+      return false; // Treat as expired if decoding fails
     }
   }
 
@@ -74,8 +96,8 @@ class ApiUtils {
     }
   }
 
-  static void validateToken(String token) async {
-    if(!isTokenExpired(token)) {
+  static Future<void> refreshToken(String token) async {
+    if(isTokenValid(token)) {
       return;
     }
     String login = await SecureStorage().readSecureData('login');

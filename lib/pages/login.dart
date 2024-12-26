@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/forms/login_form.dart';
 import 'package:my_doggo_app/pages/home.dart';
 import 'package:my_doggo_app/pages/register.dart';
@@ -14,13 +15,19 @@ class LoginPage extends StatefulWidget {
 class _LoginPageWidgetState extends State<LoginPage> {
   void isUserLoggedIn() async {
     String? token = await SecureStorage().readToken();
-    bool isUserLoggedIn =  token == null ? false : true;
-    if (isUserLoggedIn) {
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+    if (token == null) return;
+    bool isValid = ApiUtils.isTokenValid(token);
+    if (!isValid) {
+      await SecureStorage().deleteSecureData("token");
+      await ApiUtils.refreshToken(token);
+      isUserLoggedIn();
+      return;
     }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
   }
 
   @override

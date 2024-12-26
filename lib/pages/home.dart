@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_doggo_app/api_utils.dart';
 import 'package:my_doggo_app/environment.dart';
 import 'package:my_doggo_app/models/animal_model.dart';
-import 'package:my_doggo_app/pages/animal/add_animal.dart';
+import 'package:my_doggo_app/pages/animal/create_animal.dart';
 import 'package:my_doggo_app/pages/animal/animal.dart';
 import 'package:my_doggo_app/pages/login.dart';
 import 'package:my_doggo_app/secure_storage.dart';
@@ -129,7 +129,7 @@ class _HomePageWidgetState extends State<HomePage> {
       onPressed: () {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => AddAnimal()),
+          MaterialPageRoute(builder: (context) => CreateAnimalPage()),
         );
       },
       foregroundColor: Colors.black,
@@ -236,12 +236,13 @@ class _HomePageWidgetState extends State<HomePage> {
     );
   }
 
-  Center vetsPage (BuildContext context) {
-    return Center(
+  Container vetsPage (BuildContext context) {
+    return Container(
       child: Column(
         children: [
           Text("Vets"),
-          Text("JS")
+          Text("JS"),
+          Text("Hello")
         ],
       ),
     );
